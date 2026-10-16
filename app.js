@@ -97,9 +97,9 @@ const HOBBY_SENT=[
  {m:'ב{h} אתה מזהיר. תמשיך ככה',f:'ב{h} את מזהירה. תמשיכי ככה'}
 ];
 
-const state={name:'',gender:'',age:null,hobbies:[],font:'auto',preserve:[],strengthen:[],palette:'rainbow',sigChoice:'love',signature:'אוהבים אותך ❤️',count:16,seed:1};
+const state={name:'',gender:'',age:null,hobbies:[],font:'auto',preserve:[],strengthen:[],palette:'rainbow',backStyle:'decorated',sigChoice:'love',signature:'אוהבים אותך ❤️',count:16,seed:1};
 let stepIdx=0;
-const STEPS_TOTAL=10;
+const STEPS_TOTAL=11;
 function save(){try{localStorage.setItem('kartiseiAl',JSON.stringify(state))}catch(e){}}
 function load(){try{const s=JSON.parse(localStorage.getItem('kartiseiAl'));if(s&&typeof s==='object')Object.assign(state,s);state.seed=Date.now()%100000;}catch(e){}}
 
@@ -175,6 +175,12 @@ function stepHTML(i){
    </div><div id="sigCustomWrap" style="margin-top:12px;${state.sigChoice==='custom'?'':'display:none'}"><input class="big-input" id="inSig" maxlength="30" placeholder="למשל: אוהבת אותך, אמא" value="${state.sigChoice==='custom'?esc(state.signature):''}"></div>`,false);
   }
   case 9: {
+   return shell('איך ייראה גב הכרטיסיה?','הגב מודפס על הצד השני של הדף.',`<div class="radio-col">
+    <button class="radio-opt${state.backStyle==='decorated'?' sel':''}" data-b="decorated"><span class="r-emo">🎨</span>מעוצב · צורות ואימוג׳י בצבע הכרטיסיה</button>
+    <button class="radio-opt${state.backStyle==='solid'?' sel':''}" data-b="solid"><span class="r-emo">🟦</span>חלק · רקע אחיד בצבע הכרטיסיה</button>
+   </div>`,false);
+  }
+  case 10: {
    return shell('כמה כרטיסיות נכין?','כל דף A4 מכיל 8 כרטיסיות.',`<div class="radio-col">
     <button class="radio-opt${state.count===8?' sel':''}" data-c="8"><span class="r-emo">📄</span>8 כרטיסיות · דף אחד דו-צדדי</button>
     <button class="radio-opt${state.count===16?' sel':''}" data-c="16"><span class="r-emo">📄📄</span>16 כרטיסיות · 2 דפים דו-צדדי</button>
@@ -204,7 +210,8 @@ function bindStep(i){
    if(state.sigChoice==='custom'&&(!state.signature||state.signature==='אוהבים אותך ❤️'))state.signature='';
    save();render();if(state.sigChoice==='custom')setTimeout(()=>$('#inSig').focus(),60);});
    {const si=$('#inSig');if(si)si.addEventListener('input',()=>{state.signature=si.value;si.style.borderColor='';save();});}break;
-  case 9:$$('[data-c]').forEach(b=>b.onclick=()=>{state.count=+b.dataset.c;save();render();setTimeout(()=>{buildCards();stepIdx=99;save();render();},230);});break;
+  case 9:$$('[data-b]').forEach(b=>b.onclick=()=>{state.backStyle=b.dataset.b;save();render();setTimeout(()=>{stepIdx=10;save();render();},230);});break;
+  case 10:$$('[data-c]').forEach(b=>b.onclick=()=>{state.count=+b.dataset.c;save();render();setTimeout(()=>{buildCards();stepIdx=99;save();render();},230);});break;
  }
 }
 function bindChips(key,arr){
@@ -259,11 +266,20 @@ function frontCardEl(c){
  d.innerHTML='<div class="e">'+c.emoji+'</div><div class="n" style="color:'+c.accent+'">'+esc(state.name)+',</div><div class="s">'+esc(c.text)+'</div>'+sig;
  return d;
 }
-function backCardEl(c){
+function backPattern(c,ix){
+ if(state.backStyle==='solid')return '';
+ const tier=state.age<=8?'young':state.age>=13?'teen':'mid';
+ const glyphs=tier==='young'?['♥','★','●','♦']:tier==='teen'?['✦','★','♥']:['★','♥','✿','●'];
+ const rnd=mulberry32(state.seed*31+ix*7+3);
+ let out='';
+ for(let i=0;i<12;i++){const g=pick(glyphs,rnd);const sz=(4.5+rnd()*5).toFixed(1);out+='<span style="font-size:'+sz+'mm">'+g+'</span>';}
+ return '<div class="pat" style="color:'+c.accent+'">'+out+'</div>';
+}
+function backCardEl(c,ix){
  const d=document.createElement('div');
  d.className='fcard back';
  d.style.background=c.bg;
- d.innerHTML='<div class="pat">'+'<span>'+c.emoji+'</span>'.repeat(9)+'</div><div class="big">'+c.emoji+'</div><div class="bn">'+esc(state.name)+'</div><div class="brand">כרטיסי על ⭐</div>';
+ d.innerHTML=backPattern(c,ix||0)+'<div class="big">'+c.emoji+'</div><div class="bn" style="color:'+c.accent+'">'+esc(state.name)+'</div><div class="brand">כרטיסי על ⭐</div>';
  return d;
 }
 function makeSheet(cards,back){
@@ -272,7 +288,7 @@ function makeSheet(cards,back){
   const srcIdx=back?(Math.floor(i/2))*2+(1-(i%2)):i;
   const c=cards[srcIdx];
   const cell=document.createElement('div');cell.className='cell';
-  cell.appendChild(back?backCardEl(c):frontCardEl(c));
+  cell.appendChild(back?backCardEl(c,srcIdx):frontCardEl(c));
   sheet.appendChild(cell);
  }
  return sheet;
@@ -285,11 +301,11 @@ function renderSheets(){
  chunks.forEach(ch=>area.appendChild(makeSheet(ch,false)));
  chunks.forEach(ch=>area.appendChild(makeSheet(ch,true)));
 }
-let pvView='front';
+let pvView='sheets';
 function previewHTML(){
  return '<div class="screen active">'
  +'<div class="done-head"><h2>🎉 הכרטיסיות של '+esc(state.name)+' מוכנות!</h2><p>'+state.count+' כרטיסיות · '+(state.count/8)+' דפים דו-צדדי (A4)</p></div>'
- +'<div class="view-toggle"><button id="vFront" class="on">הכרטיסיות</button><button id="vBack">הגב</button></div>'
+ +'<div class="view-toggle"><button id="vSheets" class="on">📄 הדף להדפסה</button><button id="vCards">🃏 כל הכרטיסיות</button></div>'
  +'<div class="pv-grid" id="pvGrid"></div>'
  +'<div class="action-col">'
  +'<button class="btn-main" id="dlBtn">⬇️ הורדת PDF להדפסה</button>'
@@ -306,17 +322,32 @@ function bindPreview(){
  $('#prBtn').onclick=()=>window.print();
  $('#shBtn').onclick=()=>{state.seed++;save();buildCards();renderSheets();renderPreviewGrid();};
  $('#edBtn').onclick=()=>{stepIdx=0;save();render();};
- $('#newBtn').onclick=()=>{Object.assign(state,{name:'',gender:'',age:null,hobbies:[],font:'auto',preserve:[],strengthen:[],palette:'rainbow',sigChoice:'love',signature:'אוהבים אותך ❤️',count:16,seed:Date.now()%100000});stepIdx=0;save();render();};
- $('#vFront').onclick=()=>{pvView='front';renderPreviewGrid();};
- $('#vBack').onclick=()=>{pvView='back';renderPreviewGrid();};
+ $('#newBtn').onclick=()=>{Object.assign(state,{name:'',gender:'',age:null,hobbies:[],font:'auto',preserve:[],strengthen:[],palette:'rainbow',sigChoice:'love',signature:'אוהבים אותך ❤️',backStyle:'decorated',count:16,seed:Date.now()%100000});stepIdx=0;save();render();};
+ $('#vSheets').onclick=()=>{pvView='sheets';renderPreviewGrid();};
+ $('#vCards').onclick=()=>{pvView='cards';renderPreviewGrid();};
 }
 function renderPreviewGrid(){
- $('#vFront').classList.toggle('on',pvView==='front');
- $('#vBack').classList.toggle('on',pvView==='back');
+ $('#vSheets').classList.toggle('on',pvView==='sheets');
+ $('#vCards').classList.toggle('on',pvView==='cards');
  const g=$('#pvGrid');
- g.innerHTML=state.cardsColored.map(c=>pvView==='front'
-  ?'<div class="pv-card'+(state.font==='hand'?' hand':'')+'" style="background:'+c.bg+'"><div class="e">'+c.emoji+'</div><div class="n" style="color:'+c.accent+'">'+esc(state.name)+',</div><div class="s">'+esc(c.text)+'</div>'+(state.signature?'<div class="g">'+esc(state.signature)+'</div>':'')+'</div>'
-  :'<div class="pv-card back-card" style="background:'+c.bg+'"><div class="be">'+c.emoji+'</div><div class="bn">'+esc(state.name)+'</div></div>').join('');
+ if(pvView==='cards'){
+  g.className='pv-grid';
+  g.innerHTML=state.cardsColored.map(c=>'<div class="pv-card'+(state.font==='hand'?' hand':'')+'" style="background:'+c.bg+'"><div class="e">'+c.emoji+'</div><div class="n" style="color:'+c.accent+'">'+esc(state.name)+',</div><div class="s">'+esc(c.text)+'</div>'+(state.signature?'<div class="g">'+esc(state.signature)+'</div>':'')+'</div>').join('');
+  return;
+ }
+ g.className='pv-sheets';
+ const chunks=[];
+ for(let i=0;i<state.cardsColored.length;i+=8)chunks.push(state.cardsColored.slice(i,i+8));
+ g.innerHTML=chunks.map((ch,ix)=>'<div class="pvA4Label">📄 דף '+(ix+1)+' · צד קדמי</div><div class="pvA4" data-chunk="'+ix+'" data-back="0"></div>'
+  +'<div class="pvA4Label">🔄 דף '+(ix+1)+' · הגב · מדפיסים על הצד השני</div><div class="pvA4" data-chunk="'+ix+'" data-back="1"></div>').join('');
+ $$('#pvGrid .pvA4').forEach(w=>{
+  const sheet=makeSheet(chunks[+w.dataset.chunk],w.dataset.back==='1');
+  const inner=document.createElement('div');inner.className='pvA4-scale';inner.appendChild(sheet);
+  w.appendChild(inner);
+  const sc=w.clientWidth/794;
+  inner.style.transform='scale('+sc+')';
+  w.style.height=Math.ceil(1123*sc)+'px';
+ });
 }
 async function downloadPDF(){
  const btn=$('#dlBtn');
