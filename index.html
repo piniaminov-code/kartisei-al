@@ -21,7 +21,7 @@
   --font-hand:'Gveret Levin',cursive;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
+html,body{margin:0;padding:0; overflow-x:hidden; overflow-x:clip}
 body{
   font-family:var(--font-ui),sans-serif;
   background:var(--bg); color:var(--ink);
@@ -157,7 +157,7 @@ input{font-family:inherit}
 footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:40px; line-height:1.7}
 
 /* ---------- print/pdf sheets ---------- */
-#printArea{position:absolute; left:-12000px; top:0}
+#printArea{position:fixed; left:0; top:0; width:0; height:0; overflow:hidden; pointer-events:none; z-index:-1}
 .sheet{width:210mm; height:297mm; background:#fff; padding:10mm; display:grid; grid-template-columns:90mm 90mm; grid-auto-rows:60mm; column-gap:10mm; row-gap:12.33mm; direction:ltr}
 .cell{border:0.45mm dashed rgba(60,40,40,.45); border-radius:4.5mm; padding:1.6mm}
 .fcard{direction:rtl; width:100%; height:100%; border-radius:3.2mm; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2mm 4mm; position:relative}
@@ -174,7 +174,7 @@ footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:40
 .fcard.back.solid .brand{position:absolute; bottom:2.2mm; margin-top:0}
 @media print{
   body>*:not(#printArea){display:none !important}
-  #printArea{position:static; left:0}
+  #printArea{position:static; width:auto; height:auto; overflow:visible; z-index:auto}
   .sheet{page-break-after:always}
   @page{size:A4; margin:0}
 }
@@ -183,6 +183,6 @@ footer{text-align:center; color:var(--ink-soft); font-size:12.5px; margin-top:40
 <body>
 <div class="app" id="app"></div>
 <div id="printArea" aria-hidden="true"></div>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>
