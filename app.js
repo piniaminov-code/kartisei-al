@@ -322,13 +322,15 @@ async function downloadPDF(){
  const btn=$('#dlBtn');
  if(!window.jspdf||!window.html2canvas){alert('צריך חיבור לאינטרנט כדי לייצר את ה-PDF');return;}
  btn.disabled=true;const old=btn.textContent;
+ const area=$('#printArea');
+ area.style.cssText='position:absolute;left:0;top:0;z-index:-1';
  try{
   await document.fonts.ready;
   const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4',orientation:'portrait',compress:true});
   const sheets=$$('#printArea .sheet');
   for(let i=0;i<sheets.length;i++){
    btn.textContent='⏳ מכין PDF... '+(i+1)+'/'+sheets.length;
-   const canvas=await html2canvas(sheets[i],{scale:1.7,backgroundColor:'#ffffff',useCORS:true,logging:false});
+   const canvas=await html2canvas(sheets[i],{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
    const img=canvas.toDataURL('image/jpeg',0.9);
    if(i>0)pdf.addPage();
    pdf.addImage(img,'JPEG',0,0,210,297);
@@ -337,6 +339,7 @@ async function downloadPDF(){
   }
   pdf.save('כרטיסי-על-'+state.name+'.pdf');
  }catch(e){alert('משהו השתבש ביצירת ה-PDF. נסו שוב.');}
+ area.style.cssText='';
  btn.disabled=false;btn.textContent=old;
 }
 load();
