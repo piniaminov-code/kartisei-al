@@ -106,7 +106,7 @@ function load(){try{const s=JSON.parse(localStorage.getItem('kartiseiAl'));if(s&
 function render(){
  const app=$('#app');
  if(stepIdx===-1){app.innerHTML=heroHTML();bindHero();return;}
- if(stepIdx===99){app.innerHTML=previewHTML();bindPreview();renderPreviewGrid();renderSheets();return;}
+ if(stepIdx===99){app.innerHTML=previewHTML();bindPreview();renderSheets();renderPreviewGrid();return;}
  app.innerHTML=stepHTML(stepIdx);bindStep(stepIdx);
  window.scrollTo({top:0,behavior:'smooth'});
 }
