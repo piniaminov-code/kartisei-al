@@ -96,7 +96,7 @@ const STRENGTHEN_SENT={
 };
 const HOBBY_SENT=[
  {m:'{name}, אלוף העל של {h}. כל ניסיון קטן שלך משתלם',f:'{name}, אלופת העל של {h}. כל ניסיון קטן שלך משתלם'},
- {m:'ב{h} אתה מזהיר. כל כך שמח לראות כמה אתה נהנה',f:'ב{h} את מזהירה. כל כך שמח לראות כמה את נהנית'},
+ {m:'ב{h} אתה מזהיר. כל כך שמח לראות כמה אתה נהנה',f:'ב{h} את מזהירה. כל כך שמח לראות כמה את נהנית',mp:'ב{h} אתה מזהיר. כל כך שמחים לראות כמה אתה נהנה',fp:'ב{h} את מזהירה. כל כך שמחים לראות כמה את נהנית'},
  {b:'היום יום מושלם בשביל {h}. קדימה, לעשות את מה שאוהבים'}
 ];
 
@@ -240,7 +240,8 @@ function validateStep(i){
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuffle(arr,rnd){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));const t=arr[i];arr[i]=arr[j];arr[j]=t;}return arr}
 function pick(arr,rnd){return arr[Math.floor(rnd()*arr.length)]}
-function S(t){const g=state.gender;const s=t[g]||t.b||t.m||'';return s.replaceAll('{name}',state.name)}
+function sigIsPlural(){if(state.sigChoice==='love')return true;const s=(state.signature||'').trim();if(!s)return false;return /\sו\S/.test(s)||/(אוהבים|אוהבות|מכולם|משפחה|שניכם|שנינו)/.test(s)}
+function S(t){const g=state.gender;let s='';if(sigIsPlural()&&t[g+'p'])s=t[g+'p'];if(!s)s=t[g]||t.b||t.m||'';return s.replaceAll('{name}',state.name)}
 function allTrait(tr,kind){
  const dict=kind==='pre'?PRESERVE_SENT:STRENGTHEN_SENT;
  if(tr.id&&tr.id.indexOf('custom:')!==0&&dict[tr.id])return dict[tr.id].map(S);
