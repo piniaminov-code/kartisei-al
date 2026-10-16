@@ -283,8 +283,9 @@ function backPattern(c,ix){
 }
 function backCardEl(c,ix){
  const d=document.createElement('div');
- d.className='fcard back';
+ d.className='fcard back'+(state.backStyle==='solid'?' solid':'');
  d.style.background=c.bg;
+ if(state.backStyle==='solid'){d.innerHTML='<div class="brand">כרטיסי על ⭐</div>';return d;}
  d.innerHTML=backPattern(c,ix||0)+'<div class="big">'+c.emoji+'</div><div class="bn" style="color:'+c.accent+'">'+esc(state.name)+'</div><div class="brand">כרטיסי על ⭐</div>';
  return d;
 }
