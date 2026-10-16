@@ -328,10 +328,12 @@ async function downloadPDF(){
   const sheets=$$('#printArea .sheet');
   for(let i=0;i<sheets.length;i++){
    btn.textContent='⏳ מכין PDF... '+(i+1)+'/'+sheets.length;
-   const canvas=await html2canvas(sheets[i],{scale:2.3,backgroundColor:'#ffffff',useCORS:true,logging:false});
-   const img=canvas.toDataURL('image/jpeg',0.92);
+   const canvas=await html2canvas(sheets[i],{scale:1.7,backgroundColor:'#ffffff',useCORS:true,logging:false});
+   const img=canvas.toDataURL('image/jpeg',0.9);
    if(i>0)pdf.addPage();
    pdf.addImage(img,'JPEG',0,0,210,297);
+   canvas.width=0;canvas.height=0;
+   await new Promise(r=>setTimeout(r,80));
   }
   pdf.save('כרטיסי-על-'+state.name+'.pdf');
  }catch(e){alert('משהו השתבש ביצירת ה-PDF. נסו שוב.');}
