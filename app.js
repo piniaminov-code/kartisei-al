@@ -321,7 +321,7 @@ function renderSheets(){
 let pvView='sheets';
 function previewHTML(){
  return '<div class="screen active">'
- +'<div class="done-head"><h2>🎉 הכרטיסיות של '+esc(state.name)+' מוכנות!</h2><p>'+state.count+' כרטיסיות · '+(state.count/8)+' דפים דו-צדדי (A4)</p></div>'
+ +'<div class="done-head"><h2>🎉 הכרטיסיות של '+esc(state.name)+' מוכנות!</h2><p>'+state.count+' כרטיסיות · '+(state.count===8?'דף אחד דו-צדדי (A4)':(state.count/8)+' דפים דו-צדדיים (A4)')+'</p></div>'
  +'<div class="view-toggle"><button id="vSheets" class="on">📄 הדף להדפסה</button><button id="vCards">🃏 כל הכרטיסיות</button></div>'
  +'<div class="pv-grid" id="pvGrid"></div>'
  +'<div class="action-col">'
