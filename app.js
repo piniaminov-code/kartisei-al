@@ -155,7 +155,7 @@ function stepHTML(i){
  switch(i){
   case 0: return shell('איך קוראים לילד או לילדה?','השם יופיע על כל כרטיסיה, עם פנייה אישית.',`<input class="big-input" id="inName" maxlength="20" placeholder="למשל: ליאן" value="${esc(state.name)}">`,false);
   case 1: return shell('בת או בן?','כדי שהמשפטים יהיו בדיוק בלשון הנכונה.',`<div class="opt-row"><button class="opt-big${state.gender==='f'?' sel':''}" data-g="f"><span class="o-emo">👧</span>בת</button><button class="opt-big${state.gender==='m'?' sel':''}" data-g="m"><span class="o-emo">👦</span>בן</button></div>`,false);
-  case 2: return shell('בן או בת כמה?','המשפטים והעיצוב יותאמו לגיל.',`<div class="age-grid">${Array.from({length:13},(_,k)=>k+4).map(a=>`<button data-age="${a}" class="${state.age===a?'sel':''}">${a}</button>`).join('')}</div>`,false);
+  case 2: return shell(state.gender==='f'?'בת כמה?':state.gender==='m'?'בן כמה?':'מה הגיל?','המשפטים והעיצוב יותאמו לגיל.',`<div class="age-grid">${Array.from({length:13},(_,k)=>k+4).map(a=>`<button data-age="${a}" class="${state.age===a?'sel':''}">${a}</button>`).join('')}</div>`,false);
   case 3: {
    const sel=new Set(state.hobbies.map(h=>h.label));
    return shell('מה הילד או הילדה אוהבים?','תחביבים, משחקים ודמויות. אפשר לבחור כמה, וגם להוסיף משהו אחר.',chipList(HOBBIES,sel,'hob')+addRowHTML('hob','עוד תחביב...'),true);
@@ -170,7 +170,7 @@ function stepHTML(i){
   }
   case 5: {
    const sel=new Set(state.preserve.map(t=>t.label));
-   return shell('אילו תכונות שמים ורוצים לשמר?','הכרטיסיות יחזקו את מה שכבר יפה בו או בה.',chipList(TRAITS_PRESERVE,sel,'pre')+addRowHTML('pre','תכונה אחרת...'),true);
+   return shell('אילו תכונות כבר יש ורוצים לשמר?','הכרטיסיות יחזקו את מה שכבר יפה בו או בה.',chipList(TRAITS_PRESERVE,sel,'pre')+addRowHTML('pre','תכונה אחרת...'),true);
   }
   case 6: {
    const sel=new Set(state.strengthen.map(t=>t.label));
@@ -195,8 +195,8 @@ function stepHTML(i){
   case 10: {
    return shell('כמה כרטיסיות נכין?','כל דף A4 מכיל 8 כרטיסיות.',`<div class="radio-col">
     <button class="radio-opt${state.count===8?' sel':''}" data-c="8"><span class="r-emo">📄</span>8 כרטיסיות · דף אחד דו-צדדי</button>
-    <button class="radio-opt${state.count===16?' sel':''}" data-c="16"><span class="r-emo">📄📄</span>16 כרטיסיות · 2 דפים דו-צדדי</button>
-    <button class="radio-opt${state.count===24?' sel':''}" data-c="24"><span class="r-emo">📄📄📄</span>24 כרטיסיות · 3 דפים דו-צדדי</button>
+    <button class="radio-opt${state.count===16?' sel':''}" data-c="16"><span class="r-emo">📄📄</span>16 כרטיסיות · 2 דפים דו-צדדיים</button>
+    <button class="radio-opt${state.count===24?' sel':''}" data-c="24"><span class="r-emo">📄📄📄</span>24 כרטיסיות · 3 דפים דו-צדדיים</button>
    </div>`,false);
   }
  }
