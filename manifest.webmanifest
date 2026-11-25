@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "כרטיסי על – כרטיסיות עידוד אישיות",
+  "short_name": "כרטיסי על",
+  "description": "יוצרים כרטיסיות עידוד אישיות לילדים ומדפיסים PDF דו-צדדי. הכול נשאר במכשיר.",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["fullscreen", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#FFF6EC",
+  "theme_color": "#FF7A59",
+  "categories": ["education", "kids", "lifestyle"],
+  "icons": [
+    {"src": "icons/app/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/app/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
