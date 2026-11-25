@@ -1,0 +1,28 @@
+// Captures UI screenshots into docs/previews. Run: node tests/ui-shots.js (with the site served on :8765)
+const {chromium}=require('playwright');const path=require('path');
+const OUT=path.join(__dirname,'..','docs','previews');const URL=process.env.URL||'http://localhost:8765/';
+(async()=>{const b=await chromium.launch();
+ const p=await b.newPage({viewport:{width:390,height:844},deviceScaleFactor:2});
+ await p.goto(URL);await p.evaluate(()=>localStorage.clear());await p.reload();
+ await p.click('#startBtn');await p.fill('#inName','ליאן');await p.click('#bNext');
+ await p.click('[data-g=f]');await p.waitForTimeout(350);await p.click('[data-age="9"]');await p.waitForTimeout(350);
+ await p.screenshot({path:OUT+'/ui-mobile-occasion.png'});
+ await p.click('[data-occ=journey]');await p.waitForTimeout(350);
+ await p.click('[data-label="ריקוד"]');await p.click('[data-label="חתולים"]');await p.click('#bNext');
+ await p.click('[data-label="סקרנות"]');await p.click('#bNext');await p.click('#bSkip');
+ await p.click('[data-tone=w]');await p.waitForTimeout(350);
+ await p.click('[data-d=postcard]');await p.waitForTimeout(600);
+ await p.screenshot({path:OUT+'/ui-mobile-design.png',fullPage:true});
+ await p.click('#bNext');await p.waitForTimeout(600);
+ await p.screenshot({path:OUT+'/ui-mobile-fonts.png',fullPage:true});
+ await p.click('#bNext');await p.click('#bNext');
+ await p.fill('#inPersonal','זוכרת איך טיפסת לבד על הסלע הגבוה? ככה בדיוק נראה אומץ.');await p.click('#bNext');
+ await p.waitForTimeout(400);await p.screenshot({path:OUT+'/ui-mobile-back.png'});
+ await p.click('[data-b=decorated]');await p.waitForTimeout(500);await p.click('#bNext');await p.waitForTimeout(1200);
+ await p.screenshot({path:OUT+'/ui-mobile-preview.png'});
+ await p.click('#vEdit');await p.waitForTimeout(300);await p.screenshot({path:OUT+'/ui-mobile-editor.png'});
+ await p.click('#favBtn');await p.reload();await p.waitForTimeout(400);await p.screenshot({path:OUT+'/ui-mobile-hero-favorite.png',fullPage:true});
+ const d=await b.newPage({viewport:{width:1280,height:900}});await d.goto(URL);
+ await d.evaluate(()=>{Object.assign(state,{name:'עומר',gender:'m',age:11,design:'night',font:'auto',occasion:'birthday'});state.cards=null;buildCards(true);stepIdx=99;render();});
+ await d.waitForTimeout(1200);await d.screenshot({path:OUT+'/ui-desktop-preview.png'});
+ await b.close();})();
