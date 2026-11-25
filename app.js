@@ -108,6 +108,30 @@ function burst(fill){
  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="${p}" fill="${fill}" stroke="#111" stroke-width="3.2" stroke-linejoin="round"/></svg>`;
 }
 
+/* ---------- icons: everything on a card is drawn, never taken from the device's emoji font ---------- */
+const EMOJI_RE=/(?:\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]{2})(?:️|⃣|[\u{1F3FB}-\u{1F3FF}]|‍(?:\p{Extended_Pictographic}|♀|♂)️?)*/gu;
+const SYMBOL_RE=/[←-⯿️‍]/g;
+function emoKey(e){return String(e||'').replace(/️/g,'')}
+function emo(e){const src=(window.EMOJI_IMG||{})[emoKey(e)];return src?'<img class="emo" src="'+src+'" alt="" draggable="false">':''}
+/* escape text; known emoji become images, unknown emoji and stray symbols are dropped */
+function rich(t){
+ const str=String(t||'');let out='',last=0;EMOJI_RE.lastIndex=0;let m;
+ while((m=EMOJI_RE.exec(str))){out+=esc(str.slice(last,m.index).replace(SYMBOL_RE,''));out+=emo(m[0]);last=m.index+m[0].length;}
+ return out+esc(str.slice(last).replace(SYMBOL_RE,''));
+}
+const SHAPES={
+ star:'<path d="M12 1.8l3.1 6.6 7.2.9-5.3 5 1.4 7.1L12 18l-6.4 3.4L7 14.3l-5.3-5 7.2-.9z"/>',
+ heart:'<path d="M12 21.2S2.2 15 2.2 8.4A5.2 5.2 0 0 1 12 5.6a5.2 5.2 0 0 1 9.8 2.8C21.8 15 12 21.2 12 21.2z"/>',
+ flower:'<circle cx="12" cy="5.6" r="4.2"/><circle cx="18.1" cy="10" r="4.2"/><circle cx="15.8" cy="17.2" r="4.2"/><circle cx="8.2" cy="17.2" r="4.2"/><circle cx="5.9" cy="10" r="4.2"/><circle cx="12" cy="12" r="3" fill="#fff" fill-opacity=".55"/>',
+ dot:'<circle cx="12" cy="12" r="6.5"/>',
+ diamond:'<path d="M12 2l8 10-8 10-8-10z"/>',
+ sparkle:'<path d="M12 1c.8 6 4.9 10.2 11 11-6.1.8-10.2 5-11 11-.8-6-4.9-10.2-11-11 6.1-.8 10.2-5 11-11z"/>',
+ smile:'<circle cx="12" cy="12" r="9.6" fill="none" stroke-width="2"/><circle cx="8.6" cy="9.6" r="1.4" stroke="none"/><circle cx="15.4" cy="9.6" r="1.4" stroke="none"/><path d="M7.4 14c1.2 2 2.8 3 4.6 3s3.4-1 4.6-3" fill="none" stroke-width="2" stroke-linecap="round"/>',
+ pencil:'<path d="M3 21l1.3-5.2L16.6 3.5a2.1 2.1 0 0 1 3 0l.9.9a2.1 2.1 0 0 1 0 3L8.2 19.7z" fill="none" stroke-width="1.9" stroke-linejoin="round"/><path d="M14.6 5.5l3.9 3.9" fill="none" stroke-width="1.9"/>',
+ note:'<path d="M9 18.2V5.4l11-2.6v12.6" fill="none" stroke-width="2"/><ellipse cx="6.3" cy="18.4" rx="3.3" ry="2.6"/><ellipse cx="17.3" cy="15.6" rx="3.3" ry="2.6"/>'
+};
+function shape(name,color){return '<svg class="shp" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="'+color+'" stroke="'+color+'">'+SHAPES[name]+'</svg>'}
+
 /* ================= designs ================= */
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuffle(arr,rnd){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));const t=arr[i];arr[i]=arr[j];arr[j]=t;}return arr}
@@ -128,42 +152,42 @@ const DESIGNS={
   colors:i=>{const p=PALETTES[state.palette]||PALETTES.rainbow;const c=p.cards[i%p.cards.length];return{bg:c[0],ac:c[1],ink:'rgba(0,0,0,.68)',soft:'rgba(0,0,0,.42)',solid:c[0]}},
   front:()=>({deco:''}),
   back:(c,i,rnd)=>{
-   const tier=ageTier();const glyphs=tier==='young'?['♥','★','●','♦']:tier==='teen'?['✦','★','♥']:['★','♥','✿','●'];
-   let out='';for(let k=0;k<12;k++)out+='<span style="font-size:'+(4.5+rnd()*5).toFixed(1)+'em">'+pick(glyphs,rnd)+'</span>';
-   return '<div class="pat">'+out+'</div><div class="ct"><div class="big">'+c.emoji+'</div><div class="bn">'+esc(state.name)+'</div><div class="brand">כרטיסי על ⭐</div></div>';
+   const tier=ageTier();const glyphs=tier==='young'?['heart','star','dot','diamond']:tier==='teen'?['sparkle','star','heart']:['star','heart','flower','dot'];
+   let out='';for(let k=0;k<12;k++)out+='<span style="font-size:'+(4.5+rnd()*5).toFixed(1)+'em">'+shape(pick(glyphs,rnd),c.ac)+'</span>';
+   return '<div class="pat">'+out+'</div><div class="ct"><div class="big">'+emo(c.emoji)+'</div><div class="bn">'+rich(state.name)+'</div><div class="brand">כרטיסי על '+shape('star','#E9B200')+'</div></div>';
   }},
  night:{name:'שמיים זרועי כוכבים',desc:'כחול לילה, זהב וירח',font:'frank',hand:'gveret',
   colors:i=>{const b=[['#1B2350','#33407A'],['#22305E','#3B5590'],['#2A1F4F','#4A3A80'],['#152B45','#2B5070'],['#2B2350','#4B3D7A'],['#1D2B4A','#35507A']][i%6];return{bg:b[0],bg2:b[1],ac:'#F4C95D',ink:'#F4EFDD',soft:'rgba(244,239,221,.62)',solid:b[0]}},
   front:(c,i,rnd)=>{let s='<div class="frame"></div>'+MOON;
-   edgeSpots(16,rnd,.1).forEach(([x,y],k)=>{s+='<span class="star" style="left:'+x+'%;top:'+y+'%;font-size:'+(1.4+rnd()*2.4).toFixed(1)+'em;opacity:'+(.45+rnd()*.5).toFixed(2)+'">✦</span>';});
+   edgeSpots(16,rnd,.1).forEach(([x,y],k)=>{s+='<span class="star" style="left:'+x+'%;top:'+y+'%;font-size:'+(1.4+rnd()*2.4).toFixed(1)+'em;opacity:'+(.45+rnd()*.5).toFixed(2)+'">'+shape('sparkle','#F7E3A6')+'</span>';});
    return{deco:s};},
   back:(c,i,rnd)=>{let s='<div class="frame"></div>';
-   for(let k=0;k<44;k++)s+='<span class="star" style="left:'+(rnd()*96+2).toFixed(1)+'%;top:'+(rnd()*96+2).toFixed(1)+'%;font-size:'+(1.2+rnd()*2.8).toFixed(1)+'em;opacity:'+(.35+rnd()*.6).toFixed(2)+'">'+(k%3?'✦':'•')+'</span>';
-   return s+'<div class="ct">'+MOON.replace('class="moon"','class="moon mb"')+'<div class="bn">'+esc(state.name)+'</div></div>';}},
+   for(let k=0;k<44;k++)s+='<span class="star" style="left:'+(rnd()*96+2).toFixed(1)+'%;top:'+(rnd()*96+2).toFixed(1)+'%;font-size:'+(1.2+rnd()*2.8).toFixed(1)+'em;opacity:'+(.35+rnd()*.6).toFixed(2)+'">'+shape(k%3?'sparkle':'dot','#F7E3A6')+'</span>';
+   return s+'<div class="ct">'+MOON.replace('class="moon"','class="moon mb"')+'<div class="bn">'+rich(state.name)+'</div></div>';}},
  postcard:{name:'גלויה מטיילת',desc:'מסגרת דואר אוויר ובול',font:'david',hand:'gveret',
   colors:i=>{const a=['#B83227','#1F4E8C','#2E7D4F','#7D3C98','#A4610E','#16697A'][i%6];return{bg:'#FBF4E4',ac:a,ink:'#3B2F2F',soft:'#8A7B6B',solid:'#F3E6CC'}},
-  front:(c,i,rnd)=>({hideEmoji:true,deco:'<div class="air"></div><div class="paper"></div><div class="stamp" style="transform:rotate('+((rnd()*6)-1).toFixed(1)+'deg)"><div class="stamp-in" style="background:'+c.ac+'"><span>'+c.emoji+'</span></div></div><div class="pmark"><i></i><i></i><i></i></div>'}),
-  back:(c)=>'<div class="air"></div><div class="paper"></div><div class="pc-line"></div><div class="stamp"><div class="stamp-in" style="background:'+c.ac+'"><span>'+c.emoji+'</span></div></div><div class="pc-left"><div class="pc-to">אל: '+esc(state.name)+'</div><i></i><i></i><i></i></div><div class="pc-right">באהבה<br>גדולה</div>'},
+  front:(c,i,rnd)=>({hideEmoji:true,deco:'<div class="air"></div><div class="paper"></div><div class="stamp" style="transform:rotate('+((rnd()*6)-1).toFixed(1)+'deg)"><div class="stamp-in" style="background:'+c.ac+'"><span>'+emo(c.emoji)+'</span></div></div><div class="pmark"><i></i><i></i><i></i></div>'}),
+  back:(c)=>'<div class="air"></div><div class="paper"></div><div class="pc-line"></div><div class="stamp"><div class="stamp-in" style="background:'+c.ac+'"><span>'+emo(c.emoji)+'</span></div></div><div class="pc-left"><div class="pc-to">אל: '+rich(state.name)+'</div><i></i><i></i><i></i></div><div class="pc-right">באהבה<br>גדולה</div>'},
  notebook:{name:'דף מחברת',desc:'שורות, שוליים וסלוטייפ',font:'alef',hand:'gveret',
   colors:i=>{const a=['#2B5FAE','#C2410C','#15803D','#7C3AED','#BE185D','#0E7490'][i%6];return{bg:'#FFFFFF',ac:a,ink:'#24243A',soft:'#7C7C95',solid:['#EAF1FB','#FDEEE6','#E8F5EC','#F1EBFD','#FBE9F1','#E6F4F7'][i%6]}},
   front:(c,i,rnd)=>({deco:'<div class="lines"></div><div class="margin"></div><div class="margin m2"></div><div class="holes"><i></i><i></i><i></i></div><div class="tape" style="transform:rotate('+(-6+rnd()*12).toFixed(1)+'deg)"></div>'}),
-  back:(c,i,rnd)=>{let s='<div class="grid"></div>';const g=['★','♥','✿','☺','✎','♪'];
-   edgeSpots(10,rnd,.22).forEach(([x,y])=>{s+='<span class="doodle" style="left:'+x+'%;top:'+y+'%;transform:rotate('+(-25+rnd()*50).toFixed(0)+'deg)">'+pick(g,rnd)+'</span>';});
-   return s+'<div class="ct"><div class="big">'+c.emoji+'</div><div class="bn">'+esc(state.name)+'</div></div>';}},
+  back:(c,i,rnd)=>{let s='<div class="grid"></div>';const g=['star','heart','flower','smile','pencil','note'];
+   edgeSpots(10,rnd,.22).forEach(([x,y])=>{s+='<span class="doodle" style="left:'+x+'%;top:'+y+'%;transform:rotate('+(-25+rnd()*50).toFixed(0)+'deg)">'+shape(pick(g,rnd),c.ac)+'</span>';});
+   return s+'<div class="ct"><div class="big">'+emo(c.emoji)+'</div><div class="bn">'+rich(state.name)+'</div></div>';}},
  confetti:{name:'מסיבת קונפטי',desc:'צבעוני, חגיגי ושמח',font:'fredoka',hand:'playpen',
   colors:i=>{const b=[['#FFE3EC','#E0356B'],['#E3F1FF','#1D6FC0'],['#FFF2CF','#C77700'],['#E4F8E6','#1F8A4C'],['#EFE6FF','#6E35D6'],['#FFE7D6','#D5531F']][i%6];return{bg:b[0],ac:b[1],ink:'#2E2433',soft:'rgba(46,36,51,.5)',solid:b[0]}},
   front:(c,i,rnd)=>({deco:'<div class="frame"></div>'+confetti(22,rnd,.1)}),
-  back:(c,i,rnd)=>confetti(60,rnd,0)+'<div class="ct"><div class="disc"><span>'+c.emoji+'</span></div><div class="bn">'+esc(state.name)+'</div></div>'},
+  back:(c,i,rnd)=>confetti(60,rnd,0)+'<div class="ct"><div class="disc"><span>'+emo(c.emoji)+'</span></div><div class="bn">'+rich(state.name)+'</div></div>'},
  garden:{name:'גן פורח',desc:'ענפים עדינים ומסגרת כפולה',font:'bellefair',hand:'gveret',
   colors:i=>{const b=[['#F6F1E4','#4F7A4A','#E8A0A8'],['#EEF4E8','#5E8A35','#F0B86E'],['#F8EDE6','#9A5A44','#E59A8C'],['#F2EEF6','#6E5488','#C9A0DC'],['#EDF3F1','#3F7F72','#9CC6E6'],['#FAF3E3','#8A6A25','#E7A3A3']][i%6];return{bg:b[0],ac:b[1],fl:b[2],ink:'#3A3A2E',soft:'#8A8A74',solid:b[0]}},
   front:(c)=>{const sp=sprig(c.ac,c.ac,c.fl);return{deco:'<div class="frame"></div><div class="frame2"></div><div class="sprig tl">'+sp+'</div><div class="sprig br">'+sp+'</div>'};},
   back:(c,i,rnd)=>{const sp=sprig(c.ac,c.ac,c.fl);let s='<div class="frame"></div><div class="frame2"></div>';
    [[8,10,0],[70,6,80],[6,62,-80],[72,64,170],[40,0,40],[40,78,210]].forEach(([x,y,r])=>{s+='<div class="sprig sm" style="left:'+x+'%;top:'+y+'%;transform:rotate('+r+'deg)">'+sp+'</div>';});
-   return s+'<div class="ct"><div class="bn">'+esc(state.name)+'</div></div>';}},
+   return s+'<div class="ct"><div class="bn">'+rich(state.name)+'</div></div>';}},
  comic:{name:'קומיקס',desc:'בועת דיבור, נקודות ובום!',font:'secular',hand:'karantina',
   colors:i=>{const b=[['#FFE34D','#D7192A'],['#6FD3F2','#1B2F8A'],['#FF9CC2','#6A0E80'],['#A6E879','#0B5E2A'],['#FFB75E','#A3200F'],['#CDB3FF','#311483']][i%6];return{bg:b[0],ac:b[1],ink:'#111',soft:'rgba(0,0,0,.55)',solid:b[0]}},
-  front:(c)=>({hideEmoji:true,bubble:true,deco:'<div class="dots"></div><div class="frame"></div><div class="burst">'+burst('#fff')+'<span>'+c.emoji+'</span></div>'}),
-  back:(c)=>'<div class="dots"></div><div class="frame"></div><div class="ct"><div class="burst bb">'+burst('#fff')+'<span>'+c.emoji+'</span></div><div class="bn">'+esc(state.name)+'</div></div>'},
+  front:(c)=>({hideEmoji:true,bubble:true,deco:'<div class="dots"></div><div class="frame"></div><div class="burst">'+burst('#fff')+'<span>'+emo(c.emoji)+'</span></div>'}),
+  back:(c)=>'<div class="dots"></div><div class="frame"></div><div class="ct"><div class="burst bb">'+burst('#fff')+'<span>'+emo(c.emoji)+'</span></div><div class="bn">'+rich(state.name)+'</div></div>'},
  minimal:{name:'נקי ומודרני',desc:'לבן, פס צבע ומונוגרמה',font:'heebo',hand:'gveret',
   colors:i=>{const a=['#E4572E','#2D6A8F','#3D8B5F','#8E5BB5','#B8901A','#D14D72'][i%6];return{bg:'#FFFFFF',ac:a,ink:'#222',soft:'#8A8A8A',solid:a}},
   front:()=>({hideEmoji:true,rule:true,deco:'<div class="bar"></div><div class="corner"></div>'}),
@@ -467,9 +491,9 @@ function cardEl(c,side,o){
  }
  const f=d.front(c,c.idx||0,rnd);
  el.className='fcard f-front d-'+dk;
- const sig=state.signature?'<div class="g">'+esc(state.signature)+'</div>':'';
- const s='<div class="s">'+esc(c.text)+RLM+'</div>';
- el.innerHTML=f.deco+'<div class="ct">'+(f.hideEmoji?'':'<div class="e">'+c.emoji+'</div>')+'<div class="n">'+esc(state.name)+','+RLM+'</div>'+(f.rule?'<div class="rule"></div>':'')+(f.bubble?'<div class="bubble">'+s+'<i class="tail"></i></div>':s)+sig+'</div>';
+ const sig=state.signature?'<div class="g">'+rich(state.signature)+'</div>':'';
+ const s='<div class="s">'+rich(c.text)+RLM+'</div>';
+ el.innerHTML=f.deco+'<div class="ct">'+(f.hideEmoji?'':'<div class="e">'+emo(c.emoji)+'</div>')+'<div class="n">'+rich(state.name)+','+RLM+'</div>'+(f.rule?'<div class="rule"></div>':'')+(f.bubble?'<div class="bubble">'+s+'<i class="tail"></i></div>':s)+sig+'</div>';
  return el;
 }
 /* shrink text until it fits the card (never clip, never overflow) */
@@ -579,14 +603,14 @@ const MAX_CARDS=48;
 function renderEditor(g){
  g.className='editor';
  g.innerHTML='<p class="ed-hint">אפשר לשנות כל משפט, להחליף אימוג׳י בלחיצה, לסדר מחדש או למחוק. הטקסט נשמר כמו שכתבתם.</p>'
-  +state.cards.map((c,i)=>'<div class="ed-row" data-i="'+i+'"><span class="ed-num">'+(i+1)+'</span><button class="ed-emo" title="החלפת אימוג׳י">'+c.emoji+'</button><textarea rows="2" maxlength="220" aria-label="משפט '+(i+1)+'">'+esc(c.text)+'</textarea><div class="ed-btns"><button data-act="up" title="למעלה" '+(i===0?'disabled':'')+'>▲</button><button data-act="down" title="למטה" '+(i===state.cards.length-1?'disabled':'')+'>▼</button><button data-act="del" title="מחיקה">✕</button></div></div>').join('')
+  +state.cards.map((c,i)=>'<div class="ed-row" data-i="'+i+'"><span class="ed-num">'+(i+1)+'</span><button class="ed-emo" title="החלפת אימוג׳י">'+emo(c.emoji)+'</button><textarea rows="2" maxlength="220" aria-label="משפט '+(i+1)+'">'+esc(c.text)+'</textarea><div class="ed-btns"><button data-act="up" title="למעלה" '+(i===0?'disabled':'')+'>▲</button><button data-act="down" title="למטה" '+(i===state.cards.length-1?'disabled':'')+'>▼</button><button data-act="del" title="מחיקה">✕</button></div></div>').join('')
   +'<button class="btn-sec" id="edAdd" '+(state.cards.length>=MAX_CARDS?'disabled':'')+'>➕ הוספת כרטיסייה</button>';
  let tmr;
  $$('.ed-row',g).forEach(row=>{
   const i=+row.dataset.i;
   const ta=row.querySelector('textarea');const grow=()=>{ta.style.height='auto';ta.style.height=(ta.scrollHeight+2)+'px';};grow();
   ta.addEventListener('input',e=>{grow();state.cards[i].text=e.target.value;state.cards[i].edited=true;save();clearTimeout(tmr);tmr=setTimeout(renderSheets,350);});
-  row.querySelector('.ed-emo').onclick=e=>{const ix=EMOJI_CHOICES.indexOf(state.cards[i].emoji);state.cards[i].emoji=EMOJI_CHOICES[(ix+1)%EMOJI_CHOICES.length];e.target.textContent=state.cards[i].emoji;save();renderSheets();};
+  row.querySelector('.ed-emo').onclick=e=>{const ix=EMOJI_CHOICES.indexOf(state.cards[i].emoji);state.cards[i].emoji=EMOJI_CHOICES[(ix+1)%EMOJI_CHOICES.length];e.currentTarget.innerHTML=emo(state.cards[i].emoji);save();renderSheets();};
   row.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{
    const a=b.dataset.act,arr=state.cards;
    if(a==='up'&&i>0)[arr[i-1],arr[i]]=[arr[i],arr[i-1]];

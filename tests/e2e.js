@@ -1,9 +1,9 @@
-// End-to-end checks at phone and desktop sizes. Serve the repo root on :8765 first, e.g. `python3 -m http.server 8765`, then `node tests/e2e.js`.
+// End-to-end checks at phone and desktop sizes, in a browser without emoji/symbol fonts (SYSTEM_FONTS=1 to use the normal ones). Serve the repo root on :8765 first, e.g. `python3 -m http.server 8765`, then `node tests/e2e.js`.
 const {chromium,devices}=require('playwright');const fs=require('fs');const os=require('os');const path=require('path');
 const TMP=fs.mkdtempSync(path.join(os.tmpdir(),'kartisei-'));
 const ok=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)process.exitCode=1;};
 async function run(name,ctxOpts){
- const b=await chromium.launch();const ctx=await b.newContext({...ctxOpts,acceptDownloads:true});const p=await ctx.newPage();
+ const b=await require('./bare-browser').launch(!process.env.SYSTEM_FONTS);const ctx=await b.newContext({...ctxOpts,acceptDownloads:true});const p=await ctx.newPage();
  const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
  const ext=[];p.on('request',r=>{if(!r.url().startsWith('http://localhost')&&!r.url().startsWith('data:'))ext.push(r.url())});
  await p.goto('http://localhost:8765/');
