@@ -243,8 +243,8 @@ const STEPS=['name','gender','age','occasion','hobbies','preserve','strengthen',
 let stepIdx=-1;
 function render(){
  const app=$('#app');
- if(stepIdx===-1){app.innerHTML=heroHTML();bindHero();return;}
- if(stepIdx===99){app.innerHTML=previewHTML();bindPreview();renderSheets();renderPreviewGrid();return;}
+ if(stepIdx===-1){app.innerHTML=heroHTML();bindHero();bindTools();return;}
+ if(stepIdx===99){app.innerHTML=previewHTML();bindPreview();bindTools();renderSheets();renderPreviewGrid();return;}
  app.innerHTML=stepHTML(STEPS[stepIdx]);bindStep(STEPS[stepIdx]);afterStepRender(STEPS[stepIdx]);
  window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -259,6 +259,7 @@ function heroHTML(){
   <button class="cta" id="startBtn">${fav?'מתחילים מחדש ✨':'מתחילים ✨'}</button>
   <div class="hero-feats"><span>🖨️ PDF דו-צדדי</span><span>🎨 ${DESIGN_ORDER.length} עיצובים</span><span>✍️ ${FONTS.length} סוגי כתב</span><span>🎂 ${OCCASIONS.length} ערכות לפי מצב</span><span>✏️ עריכת כל משפט</span><span>🔒 הכול נשאר אצלך</span></div>
   <p class="privacy"><b>פרטיות:</b> הכול קורה בתוך הדפדפן. השם, הבחירות והמועדף נשמרים רק במכשיר הזה (כדי שאפשר יהיה להמשיך אחר כך) ולא נשלחים לשום מקום. גם הגופנים ויצירת ה-PDF נטענים מהאתר עצמו, בלי שירותים חיצוניים. כדי למחוק, מנקים את נתוני האתר בדפדפן.</p>
+  ${toolsHTML()}
  </div>`;
 }
 function bindHero(){
@@ -561,6 +562,7 @@ function previewHTML(){
  +'<button class="btn-sec" id="newBtn">➕ כרטיסיות לילד נוסף</button>'
  +'</div><div class="toast" id="toast"></div>'
  +'<div class="print-tip"><b>איך מדפיסים?</b><br>נייר A4 רגיל או קצת קשיח · איכות גבוהה · קנה מידה 100% (לא "התאמה לעמוד") · '+(state.backStyle==='none'?'הדפסה חד-צדדית.':'דו-צדדי עם היפוך על הצד הארוך.')+' אחר כך גוזרים על הקווים המקווקווים ✂️</div>'
+ +toolsHTML()
  +'</div>';
 }
 function summaryText(){const pages=Math.ceil(state.cards.length/perPage(layout()));return state.cards.length+' כרטיסיות · '+LAYOUTS[state.layout].label+' · '+(pages===1?'דף אחד':pages+' דפים')+(state.backStyle==='none'?' (צד אחד)':' דו-צדדיים')+' · '+design().name}
@@ -646,6 +648,75 @@ async function downloadPDF(){
  area.style.cssText='';
  btn.disabled=false;btn.textContent=old;
 }
+
+/* ================= fullscreen & add to home screen ================= */
+let installEvt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;refreshTools();});
+window.addEventListener('appinstalled',()=>{installEvt=null;refreshTools();});
+const UA=navigator.userAgent||'';
+const IS_IOS=/iPhone|iPad|iPod/.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const IS_ANDROID=/Android/i.test(UA);
+/* installed app = standalone/minimal-ui window, iOS home-screen app, or fullscreen that the page did NOT request
+   (Chrome also reports display-mode: fullscreen while the Fullscreen API is active) */
+function isStandalone(){
+ const mm=m=>window.matchMedia&&matchMedia('(display-mode: '+m+')').matches;
+ return mm('standalone')||mm('minimal-ui')||navigator.standalone===true||(mm('fullscreen')&&!fsElement());
+}
+/* iPhone Safari has no page fullscreen at all, so the button is never offered there */
+function fsSupported(){if(/iPhone|iPod/.test(UA))return false;return !!(document.fullscreenEnabled||document.webkitFullscreenEnabled)}
+function fsElement(){return document.fullscreenElement||document.webkitFullscreenElement||null}
+const ICON_FS='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+const ICON_FS_EXIT='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+const ICON_ADD='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+const ICON_SHARE='<svg class="share-ic" viewBox="0 0 24 24" fill="none" stroke="#1E7BF2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="כפתור השיתוף"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg>';
+function toolsHTML(){return '<div class="app-tools" id="appTools" hidden><button class="tool-btn" id="fsBtn" hidden></button><button class="tool-btn" id="instBtn" hidden>'+ICON_ADD+'<span>הוספה למסך הבית</span></button></div>'}
+function refreshTools(){
+ const box=$('#appTools');if(!box)return;
+ if(isStandalone()){box.hidden=true;return;}
+ const fs=$('#fsBtn'),ib=$('#instBtn');
+ fs.hidden=!fsSupported();
+ if(!fs.hidden)fs.innerHTML=fsElement()?ICON_FS_EXIT+'<span>יציאה ממסך מלא</span>':ICON_FS+'<span>מסך מלא</span>';
+ ib.hidden=false;
+ box.hidden=fs.hidden&&ib.hidden;
+}
+function bindTools(){
+ const fs=$('#fsBtn'),ib=$('#instBtn');if(!fs)return;
+ fs.onclick=async()=>{
+  try{
+   if(fsElement()){await (document.exitFullscreen||document.webkitExitFullscreen).call(document);}
+   else{const el=document.documentElement;await (el.requestFullscreen||el.webkitRequestFullscreen).call(el,{navigationUI:'hide'});}
+  }catch(e){toast('הדפדפן לא אפשר מסך מלא כרגע.');}
+  refreshTools();
+ };
+ ib.onclick=async()=>{
+  if(installEvt){const e=installEvt;installEvt=null;try{await e.prompt();await e.userChoice;}catch(err){}refreshTools();return;}
+  showInstallSheet();
+ };
+ refreshTools();
+}
+function showInstallSheet(){
+ let body;
+ if(IS_IOS){
+  body='<h3>הוספה למסך הבית</h3><ol><li>לוחצים על כפתור השיתוף '+ICON_SHARE+' בסרגל הדפדפן.</li><li>גוללים ובוחרים <b>"הוספה למסך הבית"</b>.</li><li>לוחצים <b>"הוספה"</b>. האייקון של כרטיסי על יופיע במסך הבית.</li></ol><p>ב-iPhone וב-iPad ההוספה נעשית רק ידנית מתפריט השיתוף. אם האפשרות לא מופיעה, פותחים את האתר ב-Safari.</p>';
+ }else if(IS_ANDROID){
+  body='<h3>הוספה למסך הבית</h3><ol><li>פותחים את תפריט הדפדפן (⋮ או ☰).</li><li>בוחרים <b>"הוספה למסך הבית"</b> או <b>"התקנת אפליקציה"</b>.</li></ol><p>השם המדויק משתנה בין דפדפנים. אם האפשרות לא מופיעה, הדפדפן הזה לא תומך בהוספה, ואפשר לנסות ב-Chrome.</p>';
+ }else{
+  body='<h3>הוספה כאפליקציה במחשב</h3><p><b>Chrome או Edge:</b> בתפריט הדפדפן בוחרים "התקנת כרטיסי על" (או אייקון ההתקנה בשורת הכתובת), אם האפשרות מופיעה.</p><p><b>Safari ב-Mac:</b> בתפריט "קובץ" בוחרים "הוספה ל-Dock" (macOS Sonoma ומעלה).</p><p><b>Firefox במחשב:</b> אין אפשרות התקנה. אפשר לשמור סימנייה (Ctrl+D).</p>';
+ }
+ const back=document.createElement('div');back.className='inst-back';back.setAttribute('role','presentation');
+ back.innerHTML='<div class="inst-sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT">'+body.replace('<h3>','<h3 id="sheetT">')+'<button class="inst-close" id="sheetClose">הבנתי</button></div>';
+ const close=()=>{back.remove();document.removeEventListener('keydown',esc_);ib&&ib.focus();};
+ const ib=$('#instBtn');const esc_=e=>{if(e.key==='Escape')close();};
+ back.addEventListener('click',e=>{if(e.target===back)close();});
+ document.addEventListener('keydown',esc_);
+ document.body.appendChild(back);$('#sheetClose').onclick=close;$('#sheetClose').focus();
+}
+document.addEventListener('fullscreenchange',refreshTools);document.addEventListener('webkitfullscreenchange',refreshTools);
+if(window.matchMedia)['standalone','fullscreen','minimal-ui'].forEach(m=>{const q=matchMedia('(display-mode: '+m+')');q.addEventListener&&q.addEventListener('change',refreshTools);});
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+ window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});});
+}
+
 window.addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(()=>{if(stepIdx===99&&pvView!=='edit')renderPreviewGrid();else if(stepIdx>=0&&stepIdx<99)afterStepRender(STEPS[stepIdx]);},200);});
 load();
 stepIdx=-1;
