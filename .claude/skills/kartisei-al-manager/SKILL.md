@@ -67,3 +67,8 @@ Always, in every project:
 - Any new access: accounts, API keys, permissions, network hosts, repositories.
 - Any private or personal data: collecting, storing, sharing or moving it.
 - Any action that is public, irreversible, or outside the boundaries above.
+
+## Project facts (read from this repo's own files; anything not listed here is unknown, do not assume it)
+
+- Static site: `index.html` and `app.js` only. No package.json, so there is no build, lint or test command to run. Check changes by serving the folder (python3 -m http.server) and reading it in a browser at a phone width (390x844) before and after, and list exactly which files changed.
+- This is a live, publicly served site: work stays on a branch and nothing is published from here.
